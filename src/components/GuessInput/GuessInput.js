@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 
-function GuessInput() {
+function GuessInput({ handleSubmitGuess }) {
   // UseState
   // Define a state to hold the value of the guess
-  const [guess, setGuess] = useState({ guess: '' });
+  const [guess, setGuess] = useState('');
+
+  // Define a state to hold all the previous guesses
 
   // Event Handlers
   // Once enter is pressed on the input form
@@ -12,11 +14,14 @@ function GuessInput() {
   function handleFormSubmit(event) {
     // Prevent the Web Page from refreshing
     event.preventDefault();
+
     // Print the Word that the user guessed
-    console.log(guess);
+    console.log({ guess });
+
+    handleSubmitGuess(guess);
 
     // Reset to an empty string
-    setGuess({ guess: '' });
+    setGuess('');
   }
 
   return (
@@ -39,11 +44,10 @@ function GuessInput() {
           //    - Update the specific parts of the newly created state
           //    - Pass the newly created state into the set state function
           onChange={(event) => {
-            const nextGuess = { ...guess };
-            nextGuess.guess = event.target.value.toUpperCase();
+            const nextGuess = event.target.value.toUpperCase();
             setGuess(nextGuess);
           }}
-          value={guess.guess}
+          value={guess}
         ></input>
       </form>
     </div>
