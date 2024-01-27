@@ -1,11 +1,15 @@
+// Packages
 import React, { useState } from 'react';
 
-import { sample } from '../../utils';
-import { WORDS } from '../../data';
-
-// import Smaller Components
+// Smaller React Components
 import GuessInput from '../GuessInput';
 import GuessResults from '../GuessResults';
+
+// Utilities and Data
+import { sample } from '../../utils';
+import { WORDS } from '../../data';
+import EndGameBanner from '../EndGameBanner/EndGameBanner';
+import { NUM_OF_GUESSES_ALLOWED } from '../../constants';
 
 // Pick a random word on every pageload.
 const answer = sample(WORDS);
@@ -16,8 +20,38 @@ function Game() {
   // UseState
   // A State to hold all the previous guess Attempts
   const [guessList, setGuessList] = useState([]);
+  const [gameStatus, setGameStatus] = useState('running');
 
-  // Event Handlers
+  //--------------- Constant Variables ---------------------------------
+  const showEndGameBanner = gameStatus !== 'running';
+
+  //--------------- Game Helper Function---------------------------------
+  function updateGameStatus(result) {
+    if (result) {
+      // Check if all the letters in the word are correct
+      const correctGuess = result.every((letterobject) => {
+        return letterobject.status === 'correct';
+      });
+
+      if (
+        correctGuess &&
+        guessList.length <= NUM_OF_GUESSES_ALLOWED
+      ) {
+        setGameStatus('won');
+        return;
+      }
+
+      if (
+        !correctGuess &&
+        guessList.length === NUM_OF_GUESSES_ALLOWED
+      ) {
+        setGameStatus('lost');
+        return;
+      }
+    }
+  }
+
+  //--------------- Event Handlers---------------------------------
   // This function hanldes the submission of the users guess to the guess list
   function handleSubmitGuess(guess) {
     // Whenever you call a setState function you are telling React
@@ -37,10 +71,21 @@ function Game() {
     });
   }
 
+  //--------------- Render Game ---------------------------------
   return (
     <>
-      <GuessResults guessList={guessList} />
+      <GuessResults
+        guessList={guessList}
+        answer={answer}
+        updateGameStatus={updateGameStatus}
+      />
       <GuessInput handleSubmitGuess={handleSubmitGuess} />
+      {showEndGameBanner && (
+        <EndGameBanner
+          gameStatus={gameStatus}
+          noOfAttempts={guessList.length}
+        />
+      )}
     </>
   );
 }
@@ -50,15 +95,20 @@ export default Game;
 // Context:
 //    I understand that GuessInput and Guess Results are two separate components.
 // Problem:
-//    The GuessResults component needs to access the guess state that
-//    the user just typed in sot it can dispaly it on the screen.
+//    The GuessResults component needs to access the previous guesses that
+//    the user typed into the GuessInput Component so it can dispaly it on the screen.
+//    For this to work the state has to be in the parent Component of the GuessResults and GuessInput Components.
+//
 // The Solution Applied:
 // The Game passes in a function as a prop to the GuessInput. This function will
-// catch the data entered into the guess Input and carry out the execution
-// of storing it into a state variable.
-// this state variable will then be passed as a prop to GetResults to render.
+// catch the data entered into the GuessInput Component and carry out the execution
+// of adding the data to the guessList state in the Parent Component.
+//
+// the guessList state variable will then be passed as a prop to GetResults to render.
 // the purpose of the Event handler function being passed is to capture the value in the
 // Guess input and to bring it back up to the Game level component.
-// This is a strategy that you can leverage in future development.
-// Using Function as props to capture the state value within a react component.
+//
+// This is a strategy that I can leverage in future development.
+// Using Function as props to capture the data or state used in a child component
+// and lifting it to the parent to perform some operation.
 //
