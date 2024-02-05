@@ -3,16 +3,12 @@ import React, { useEffect } from 'react';
 import { range } from '../../utils';
 import { checkGuess } from '../../game-helpers.js';
 
-function Guess({ value, answer, updateGameStatus }) {
+function Guess({ value, answer }) {
   // Check the Guess
   const result = checkGuess(value, answer);
   console.log(result);
 
-  // Grab the Result of the Guess
-  useEffect(() => {
-    updateGameStatus(result);
-  }, [updateGameStatus, result]);
-
+  // Render Component
   return (
     <>
       <p className="guess">

@@ -10,6 +10,8 @@ import { sample } from '../../utils';
 import { WORDS } from '../../data';
 import EndGameBanner from '../EndGameBanner/EndGameBanner';
 import { NUM_OF_GUESSES_ALLOWED } from '../../constants';
+import WonBanner from '../WonBanner/WonBanner';
+import LostBanner from '../LostBanner/LostBanner';
 
 // Pick a random word on every pageload.
 const answer = sample(WORDS);
@@ -25,66 +27,55 @@ function Game() {
   //--------------- Constant Variables ---------------------------------
   const showEndGameBanner = gameStatus !== 'running';
 
-  //--------------- Game Helper Function---------------------------------
-  function updateGameStatus(result) {
-    if (result) {
-      // Check if all the letters in the word are correct
-      const correctGuess = result.every((letterobject) => {
-        return letterobject.status === 'correct';
-      });
-
-      if (
-        correctGuess &&
-        guessList.length <= NUM_OF_GUESSES_ALLOWED
-      ) {
-        setGameStatus('won');
-        return;
-      }
-
-      if (
-        !correctGuess &&
-        guessList.length === NUM_OF_GUESSES_ALLOWED
-      ) {
-        setGameStatus('lost');
-        return;
-      }
-    }
-  }
-
   //--------------- Event Handlers---------------------------------
   // This function hanldes the submission of the users guess to the guess list
   function handleSubmitGuess(guess) {
+    // Copy the current guessList
+    const newGuessList = [...guessList];
+
+    // Add a new word to the guess list
+    // Generate a Unique Id for the new word we just received from the user, and add it to the new Guess List.
+    newGuessList.push({ id: crypto.randomUUID(), word: guess });
+
     // Whenever you call a setState function you are telling React
     // to re-render the component with the new value. This does not happen immediately,
     // React has to finish its current render before re-rendering your component with the new value.
-    setGuessList((prevGuessList) => {
-      // Copy the current list of previous guesses
-      const newGuessList = [...prevGuessList];
+    setGuessList(newGuessList);
 
-      // Add a new word to the guess list
-      // Generate a Unique Id for the new data we just received from the user.
-      // As soon as the data is created.
-      newGuessList.push({ id: crypto.randomUUID(), word: guess });
-
-      // Set this as the new value of the prevGuess
-      return newGuessList;
-    });
+    // Check if the user won the game
+    if (
+      guess === answer &&
+      newGuessList.length <= NUM_OF_GUESSES_ALLOWED
+    ) {
+      setGameStatus('won');
+    } else if (
+      guess !== answer &&
+      newGuessList.length >= NUM_OF_GUESSES_ALLOWED
+    ) {
+      setGameStatus('lost');
+    }
   }
 
   //--------------- Render Game ---------------------------------
   return (
     <>
-      <GuessResults
-        guessList={guessList}
-        answer={answer}
-        updateGameStatus={updateGameStatus}
+      <GuessResults guessList={guessList} answer={answer} />
+      <GuessInput
+        handleSubmitGuess={handleSubmitGuess}
+        gameStatus={gameStatus}
       />
-      <GuessInput handleSubmitGuess={handleSubmitGuess} />
-      {showEndGameBanner && (
+      {/* {showEndGameBanner && (
         <EndGameBanner
           gameStatus={gameStatus}
           noOfAttempts={guessList.length}
         />
+      )} */}
+
+      {gameStatus === 'won' && (
+        <WonBanner numOfGuesses={guessList.length}></WonBanner>
+      )}
+      {gameStatus === 'lost' && (
+        <LostBanner answer={answer}></LostBanner>
       )}
     </>
   );
